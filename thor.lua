@@ -112,7 +112,7 @@ service = {
             error("Stated Program Type does not exits. Please enter a valid Program Type.")
             print("Choose one of the run services:\n")
             shadowcraft.printData(service.programTypes)
-            
+
             service.getRunService()
         else
             service.runService.programType = programType
@@ -123,7 +123,7 @@ service = {
 -- [Setup] --
 
 shadowcraft.printManifest(service.manifest)
-shadowcraft.getRunService()
+service.getRunService()
 
 -- [Update] --
 
