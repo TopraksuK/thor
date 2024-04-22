@@ -4,8 +4,9 @@ local shadowcraft
 
 if fs.exists("/lib/shadowcraft/shadowcraft.lua") then
     shadowcraft = require("/lib/shadowcraft/shadowcraft")
+    shadowcraft.printManifest(require("/lib/shadowcraft/manifest"))
 else
-    printError("Shadowcraft v1.1.5+ is required to run THOR.")
+    printError("Shadowcraft v1.1.16+ is required to run THOR.")
     return nil
 end
 
