@@ -1,4 +1,4 @@
-url = "https://github.com/TopraksuK/shadowcraft/releases/latest/download/"
+url = "https://github.com/TopraksuK/thor/releases/latest/download/"
 
 local manifestContentRequest = http.get(url .. "manifest.lua")
 local manifestContent = manifestContentRequest.readAll()
@@ -28,7 +28,20 @@ if fs.exists(installationDirectory) then
         return true
     else
         print(string.format("\nA new release for %s is found.\nVersion: %s > %s\nWould you like to install it? (y/n)", installedManifest.name, installedManifest.version, tempManifest.version))
-        local answer = service.getAnswer()
+        
+        local answer
+        repeat
+            answer = read()
+            answer = string.lower(answer)
+            if answer ~= "y" and answer ~= "n" then
+                printError("Invalid answer. (y/n)")
+            end
+        until answer == "y" or answer == "n"
+        if answer == "y" then
+            answer = true
+        else
+            answer = false
+        end
 
         if not answer then
             fs.delete("/tempInstall/")
@@ -39,7 +52,20 @@ if fs.exists(installationDirectory) then
     end
 else
     print(string.format("\n%s is going to be installed.\nVersion: %s\nWould you like to install it? (y/n)", tempManifest.name, tempManifest.version))
-    local answer = service.getAnswer()
+    local answer
+    repeat
+        answer = read()
+        answer = string.lower(answer)
+        if answer ~= "y" and answer ~= "n" then
+            printError("Invalid answer. (y/n)")
+        end
+    until answer == "y" or answer == "n"
+    if answer == "y" then
+        answer = true
+    else
+        answer = false
+    end
+
 
     if not answer then
         fs.delete("/tempInstall/")
@@ -58,4 +84,6 @@ end
 
 fs.delete("/tempInstall/")
 
-service.printFancy("green",string.format("\n%s %s successfully installed.", tempManifest.name, tempManifest.version))
+term.setTextColor(colors.green)
+print(string.format("\n%s %s successfully installed.", tempManifest.name, tempManifest.version))
+term.setTextColor(colors.white)
