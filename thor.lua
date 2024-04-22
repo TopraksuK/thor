@@ -136,13 +136,6 @@ service = {
 
 -- [Setup] --
 
-local install = shadowcraft.install("https://github.com/TopraksuK/thor/releases/latest/download/")
-if not install then return nil end
-
-if shell.getRunningProgram() ~= "rom/programs/http/wget.lua" and fs.exists("/lib/thor/manifest") then
-    shadowcraft.printManifest(require("/lib/thor/manifest"))
-end
-
 service.getProgramType()
 
 -- [Update] --
