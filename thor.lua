@@ -5,7 +5,8 @@ local shadowcraft
 if fs.find("shadowcraft") then
     shadowcraft = require("shadowcraft")
 else
-    error("Shadowcraft v1.0.1+ is required to run THOR.")
+    printError("Shadowcraft v1.0.1+ is required to run THOR.")
+    return nil
 end
 
 -- [Objects] --
@@ -13,12 +14,6 @@ end
 local service = {}
 
 service = {
-    manifest = {
-        name = "THOR",
-        version = "v1.0.0",
-        directory = "/thor/",
-    },
-
     programTypes = {
         ["sensor"] = {
             set = "setSensorComputer",
@@ -105,15 +100,17 @@ service = {
         end
     end,
     
-    getRunService = function()
+    getProgramType = function()
+        print("Choose one of the Program Types:\n")
+        shadowcraft.printData(service.programTypes)
         local programType = read()
 
         if service.programTypes[programType] == nil then
-            error("Stated Program Type does not exits. Please enter a valid Program Type.")
-            print("Choose one of the run services:\n")
+            printError("Stated Program Type does not exits. Please enter a valid Program Type.")
+            print("Choose one of the Program Types:\n")
             shadowcraft.printData(service.programTypes)
 
-            service.getRunService()
+            service.getProgramType()
         else
             service.runService.programType = programType
         end
@@ -123,7 +120,8 @@ service = {
 -- [Setup] --
 
 shadowcraft.printManifest(service.manifest)
-service.getRunService()
+service.getProgramType()
 
 -- [Update] --
 
+return service
