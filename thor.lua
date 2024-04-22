@@ -2,10 +2,10 @@
 
 local shadowcraft
 
-if fs.find("shadowcraft") then
-    shadowcraft = require("shadowcraft")
+if fs.exists("/lib/shadowcraft/shadowcraft.lua") then
+    shadowcraft = require("/lib/shadowcraft/shadowcraft")
 else
-    printError("Shadowcraft v1.0.1+ is required to run THOR.")
+    printError("Shadowcraft v1.1.5+ is required to run THOR.")
     return nil
 end
 
@@ -36,8 +36,9 @@ service = {
     debug = {
         general = true,
         sensor = false,
-    
-        terminal = 11
+        
+        terminalCount = 0,
+        terminalLimit = 11
     },
 
     wirelessNetwork = {
@@ -51,7 +52,23 @@ service = {
     },
 
     updateSensorComputer = function()
+        service.updateSensorData()
+        service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
+    
+        if service.debug.general == true then
+            if service.debug.terminalCount == service.debug.terminalLimit then
+                term.clear()
+                service.debug.terminalCount = 0
+            end
+            service.debug.terminalCount = service.debug.terminalCount + 1
+            print(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", service.Date(), service.ports.sensorPort, #service.sensorNetwork.sensors))
+        end
+    end,
 
+    updateSensorData = function()        
+        for i, sensor in pairs(service.sensorNetwork.sensors) do
+            sensor.data = service.sensorNetwork.modem.callRemote(sensor.reader, "getBlockData")
+        end
     end,
 
     setSensorComputer = function()

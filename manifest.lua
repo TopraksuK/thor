@@ -2,7 +2,7 @@ local manifest = {}
 
 manifest = {
     name = "THOR",
-    version = "v1.0.1",
+    version = "v1.0.2",
     files = {
         {"manifest.lua", ""},
         {"thor.lua", ""},
