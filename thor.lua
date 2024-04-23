@@ -148,7 +148,7 @@ service = {
         service.updateSensorData()
         service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
     
-        service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.Date(), service.ports.sensorPort, #service.sensorNetwork.sensors))
+        service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.getDate(), service.ports.sensorPort, #service.sensorNetwork.sensors))
     end,
 
     updateSensorData = function()        
