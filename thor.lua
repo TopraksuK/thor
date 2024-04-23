@@ -148,7 +148,7 @@ service = {
         service.updateSensorData()
         service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
     
-        service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", service.Date(), service.ports.sensorPort, #service.sensorNetwork.sensors))
+        service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.Date(), service.ports.sensorPort, #service.sensorNetwork.sensors))
     end,
 
     updateSensorData = function()        
@@ -224,9 +224,9 @@ service = {
     end,
 
     getSensorType = function(sensorName)
-        if string.find(name, "rod") then
+        if string.find(sensorName, "rod") then
             return "rod"
-        elseif string.find(name, "heat_vent") then
+        elseif string.find(sensorName, "heat_vent") then
             return "heatVent"
         else
             return nil
