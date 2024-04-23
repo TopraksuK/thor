@@ -78,48 +78,49 @@ service = {
                     service.monitor.monitor.clear()
                     service.monitor.monitor.setCursorPos(1, 1)
                     
-                    local Date = shadowcraft.Date()
+                    local Date = shadowcraft.getDate()
                     service.monitor.monitor.setCursorPos(service.monitor.width/2 - string.len(Date)/2+1, 1)
-                    service.monitor.monitor.write(string.format("%s", shadowcraft.Date()))
+                    service.monitor.monitor.write(string.format("%s", shadowcraft.getDate()))
                     
-                    if #service.sensorNetwork.sensors <= 0 then return nil end
-                    
-                    local CoreHeatText = "CORE HEAT"
-                    service.monitor.monitor.setCursorPos(service.monitor.width/2 - string.len(CoreHeatText)/2+1, 3)
-                    service.monitor.monitor.write(CoreHeatText)
-                    local CoreHeatValue = service.sensorNetwork.sensors[1]["Data"]["heat"]
-                    service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreHeatValue)/2+1,4)
-                    service.monitor.monitor.write(CoreHeatValue)
-                    
-                    local CoreFuelText = "CORE FUEL"
-                    service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelText)/2+1,6)
-                    service.monitor.monitor.write(CoreFuelText)
-                    local CoreFuelValue = service.sensorNetwork.sensors[1]["Data"]["heat"]
-                    service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelValue)/2+1,7)
-                    service.monitor.monitor.write(CoreFuelValue)
-                    
-                    for i = 1, 9 do
-                        local X = i%3
-                        local Y = math.floor((i-1)/3)
+                    if #service.sensorNetwork.sensors > 0 then
+                        local CoreHeatText = "CORE HEAT"
+                        service.monitor.monitor.setCursorPos(service.monitor.width/2 - string.len(CoreHeatText)/2+1, 3)
+                        service.monitor.monitor.write(CoreHeatText)
+                        local CoreHeatValue = service.sensorNetwork.sensors[1]["data"]["heat"]
+                        service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreHeatValue)/2+1,4)
+                        service.monitor.monitor.write(CoreHeatValue)
                         
-                        local QUAD
-                        if X == 1 then
-                            QUAD = 6
-                        elseif X == 2 then
-                            QUAD = 2
-                        elseif X == 0 then
-                            QUAD = 6/5
+                        local CoreFuelText = "CORE FUEL"
+                        service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelText)/2+1,6)
+                        service.monitor.monitor.write(CoreFuelText)
+                        local CoreFuelValue = service.sensorNetwork.sensors[1]["data"]["heat"]
+                        service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelValue)/2+1,7)
+                        service.monitor.monitor.write(CoreFuelValue)
+                        
+                        for i = 1, 9 do
+                            local X = i%3
+                            local Y = math.floor((i-1)/3)
+                            
+                            local QUAD
+                            if X == 1 then
+                                QUAD = 6
+                            elseif X == 2 then
+                                QUAD = 2
+                            elseif X == 0 then
+                                QUAD = 6/5
+                            end
+                        
+                            local VentHeatText = string.format("VENT-%s H/O",i)
+                            service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentHeatText)/2+1,9+Y*4)
+                            service.monitor.monitor.write(VentHeatText)
+                            local VentHeatValue = service.sensorNetwork.sensors[i+1]["Data"]["heat"]
+                            local VentExtractValue = service.sensorNetwork.sensors[i+1]["Data"]["extract"]
+                            local VentValue = string.format("%s/%s",VentHeatValue,VentExtractValue)
+                            service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentValue)/2+1,10+Y*4)
+                            service.monitor.monitor.write(VentValue)
                         end
-                    
-                        local VentHeatText = string.format("VENT-%s H/O",i)
-                        service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentHeatText)/2+1,9+Y*4)
-                        service.monitor.monitor.write(VentHeatText)
-                        local VentHeatValue = service.sensorNetwork.sensors[i+1]["Data"]["heat"]
-                        local VentExtractValue = service.sensorNetwork.sensors[i+1]["Data"]["extract"]
-                        local VentValue = string.format("%s/%s",VentHeatValue,VentExtractValue)
-                        service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentValue)/2+1,10+Y*4)
-                        service.monitor.monitor.write(VentValue)
-                    end
+                    end 
+
                     sleep(1/service.runService.systemFrequency)
                 until service.runService.halt == true
             end,
@@ -127,17 +128,27 @@ service = {
                 repeat
                     local event, side, channel, replyChannel, data, distance
                     local timeoutCounter = 0
-                    repeat
-                        event, side, channel, replyChannel, data, distance = os.pullEvent("modem_message")
-                        timeoutCounter = timeoutCounter + 1
-                    until channel == service.ports.sensorPort or timeoutCounter == service.runService.portTimeout
+                    parallel.waitForAny(
+                        function()
+                            repeat
+                                event, side, channel, replyChannel, data, distance = os.pullEvent("modem_message")
+                            until channel == service.ports.sensorPort
+                        end,
+                        function()
+                            repeat
+                                timeoutCounter = timeoutCounter + 1
+                                sleep(1/service.runService.systemFrequency)
+                            until timeoutCounter >= service.runService.portTimeout
+                        end
+                    )
                     
                     if channel == service.ports.sensorPort then
                         service.sensorNetwork.sensors = data
-                        service.printDebug(string.format("\n%s | Received sensor data.",PrintService.Date()))
+                        service.printDebug(string.format("\n%s | Received sensor data.", shadowcraft.getDate()))
                     elseif timeoutCounter >= service.runService.portTimeout then
-                        error(string.format("\n%s | Sensor payload missed.", shadowcraft.Date()),0)
+                        error(string.format("\n%s | Sensor payload missed.", shadowcraft.getDate()),0)
                     end
+
                     sleep(1/service.runService.systemFrequency)
                 until service.runService.halt == true
             end
@@ -147,7 +158,7 @@ service = {
     updateSensorComputer = function()
         repeat
             service.updateSensorData()
-            service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
+            service.wirelessNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
     
             service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.getDate(), service.ports.sensorPort, #service.sensorNetwork.sensors))
             sleep(1/service.runService.systemFrequency)
