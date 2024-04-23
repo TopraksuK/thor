@@ -23,7 +23,8 @@ service = {
         ["sensor"] = {
             set = "setSensorComputer",
             update = "updateSensorComputer",
-        }
+        },
+        ["exit"] = {},
     },
 
     ports = {
@@ -65,6 +66,8 @@ service = {
     },
 
     updateMain = function()
+        if service.runService.programType == service.programTypes["exit"] then return nil end
+
         repeat
             service[service.programTypes[service.runService.programType].update]()
             sleep(1/service.runService.systemFrequency)
@@ -238,15 +241,19 @@ service = {
     getProgramType = function()
         print("Choose one of the Program Types:\n")
         shadowcraft.printData(service.programTypes)
+        print("Type exit to exit the program.")
         local programType = read()
 
         if service.programTypes[programType] == nil then
             printError("Stated Program Type does not exits. Please enter a valid Program Type.")
             print("Choose one of the Program Types:\n")
             shadowcraft.printData(service.programTypes)
+            print("Type exit to exit the program.")
 
             service.getProgramType()
         else
+            if service.runService.programType == service.programTypes["exit"] then return nil end
+            
             service.runService.programType = programType
         end
     end,
