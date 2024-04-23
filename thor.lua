@@ -208,7 +208,7 @@ service = {
             sensor = {
                 name = service.sensorNetwork.modem.callRemote(name, "getBlockName"),
                 reader = name,
-                type = service.GetSensorType(service.sensorNetwork.modem.callRemote(name, "getBlockName")),
+                type = service.getSensorType(service.sensorNetwork.modem.callRemote(name, "getBlockName")),
                 data = service.sensorNetwork.modem.callRemote(name, "getBlockData"),
             }
             
