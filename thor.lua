@@ -184,7 +184,7 @@ service = {
         service.getProgramType()
     end,
 
-    SetMonitor = function()
+    setMonitor = function()
         service.monitor.monitor = shadowcraft.getMonitor()
 
         if service.monitor.monitor == nil then return nil end
