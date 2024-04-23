@@ -86,13 +86,13 @@ service = {
                 repeat
                     if #service.sensorNetwork.sensors > 0 then
                         for i, sensor in pairs(service.sensorNetwork.sensors) do
-                            if service.getSensorType(sensor) == "heatVent" then
+                            if service.getSensorType(sensor.name) == "heatVent" then
                                 for k = 0, 8 do
-                                    if sensor.reader.Name == "blockReader_" .. k+1 then
+                                    if sensor.reader == "blockReader_" .. k+1 then
                                         if sensor.data.heat <= 100 then
-                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator"..k, "setOutput", "top", false)
+                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator_"..k, "setOutput", "top", false)
                                         else
-                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator"..k, "setOutput", "top", true)
+                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator_"..k, "setOutput", "top", true)
                                         end
                                     end
                                 end
@@ -151,14 +151,14 @@ service = {
                         service.monitor.monitor.write(CoreHeatText)
                         local CoreHeatValue = service.sensorNetwork.sensors[1]["data"]["heat"]
                         service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreHeatValue)/2+1,4)
-                        service.monitor.monitor.write(CoreHeatValue)
+                        service.monitor.monitor.write(string.format("%.2f",CoreHeatValue))
                         
                         local CoreFuelText = "CORE FUEL"
                         service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelText)/2+1,6)
                         service.monitor.monitor.write(CoreFuelText)
                         local CoreFuelValue = service.sensorNetwork.sensors[1]["data"]["heat"]
                         service.monitor.monitor.setCursorPos(service.monitor.width/2-string.len(CoreFuelValue)/2+1,7)
-                        service.monitor.monitor.write(CoreFuelValue)
+                        service.monitor.monitor.write(string.format("%.2f",CoreFuelValue))
                         
                         for i = 1, 9 do
                             local X = i%3
@@ -178,7 +178,7 @@ service = {
                             service.monitor.monitor.write(VentHeatText)
                             local VentHeatValue = service.sensorNetwork.sensors[i+1]["data"]["heat"]
                             local VentExtractValue = service.sensorNetwork.sensors[i+1]["data"]["extract"]
-                            local VentValue = string.format("%s/%s",VentHeatValue,VentExtractValue)
+                            local VentValue = string.format("%.2f/%.2f",VentHeatValue,VentExtractValue)
                             service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentValue)/2+1,10+Y*4)
                             service.monitor.monitor.write(VentValue)
                         end
@@ -242,7 +242,7 @@ service = {
 
     setFunnelComputer = function()
         service.setWirelessModem()
-        service.setFunnelComputer()
+        service.setFunnelNetwork()
 
         service.wirelessNetwork.modem.open(service.ports.sensorPort)
     end,
