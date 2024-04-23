@@ -252,8 +252,6 @@ service = {
 
             service.getProgramType()
         else
-            if service.runService.programType == service.programTypes["exit"] then return nil end
-            
             service.runService.programType = programType
         end
     end,
