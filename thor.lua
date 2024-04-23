@@ -182,19 +182,11 @@ service = {
     end,
 
     SetMonitor = function()
-        shadowcraft.printFancy("yellow","\nLooking for a Monitor...")
-        service.monitor.monitor = peripheral.find("monitor")
-        
-        if service.monitor.monitor == nil then 
-            printError("\nMonitor not found. Monitoring the reactor values is crucial for survival.") 
-            return nil 
-        else
-            shadowcraft.printFancy("green", string.format("\nMonitor found.", Monitor.getSize()))
-        end
-        
+        service.monitor.monitor = shadowcraft.getMonitor()
+
+        if service.monitor.monitor == nil then return nil end
+
         service.monitor.width, service.monitor.height = service.monitor.monitor.getSize()
-        
-        print(string.format("Monitor Size: %sx%s",MonitorWidth,MonitorHeight))
         
         service.monitor.monitor.clear()
         service.monitor.monitor.setCursorPos(1,1)
