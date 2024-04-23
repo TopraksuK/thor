@@ -145,10 +145,13 @@ service = {
     end,
 
     updateSensorComputer = function()
-        service.updateSensorData()
-        service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
+        repeat
+            service.updateSensorData()
+            service.sensorNetwork.modem.transmit(service.ports.sensorPort, service.ports.commandPort, service.sensorNetwork.sensors)
     
-        service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.getDate(), service.ports.sensorPort, #service.sensorNetwork.sensors))
+            service.printDebug(string.format("\n%s | Transmitting Sensor Data\nPort:%s\nSensors:%s", shadowcraft.getDate(), service.ports.sensorPort, #service.sensorNetwork.sensors))
+            sleep(1/service.runService.systemFrequency)
+        until service.runService.halt == true
     end,
 
     updateSensorData = function()        
