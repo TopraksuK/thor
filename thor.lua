@@ -16,6 +16,10 @@ local service = {}
 
 service = {
     programTypes = {
+        ["funnel"] = {
+            set = "setFunnelComputer",
+            update = "updateFunnelComputer",
+        },
         ["monitor"] = {
             set = "setMonitorComputer",
             update = "updateMonitorComputer",
@@ -59,6 +63,11 @@ service = {
         sensors = {},
     },
 
+    funnelNetwork = {
+        modem = nil,
+        integrators = {},
+    },
+
     monitor = {
         monitor = nil,
         width = nil,
@@ -69,6 +78,60 @@ service = {
         if service.runService.programType == "exit" then return nil end
 
         service[service.programTypes[service.runService.programType].update]()
+    end,
+
+    updateFunnelComputer = function()
+        parallel.waitForAll(
+            function()
+                repeat
+                    if #service.sensorNetwork.sensors > 0 then
+                        for i, sensor in pairs(service.sensorNetwork.sensors) do
+                            if service.getSensorType(sensor) == "heatVent" then
+                                for k = 0, 8 do
+                                    if sensor.reader.Name == "blockReader_" .. k+1 then
+                                        if sensor.data.heat <= 100 then
+                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator"..k, "setOutput", "top", false)
+                                        else
+                                            service.funnelNetwork.modem.callRemote("redstoneIntegrator"..k, "setOutput", "top", true)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end 
+
+                    sleep(1/service.runService.systemFrequency)
+                until service.runService.halt == true
+            end,
+            function()
+                repeat
+                    local event, side, channel, replyChannel, data, distance
+                    local timeoutCounter = 0
+                    parallel.waitForAny(
+                        function()
+                            repeat
+                                event, side, channel, replyChannel, data, distance = os.pullEvent("modem_message")
+                            until channel == service.ports.sensorPort
+                        end,
+                        function()
+                            repeat
+                                timeoutCounter = timeoutCounter + 1
+                                sleep(1/service.runService.systemFrequency)
+                            until timeoutCounter >= service.runService.portTimeout
+                        end
+                    )
+                    
+                    if channel == service.ports.sensorPort then
+                        service.sensorNetwork.sensors = data
+                        service.printDebug(string.format("\n%s | Received sensor data.", shadowcraft.getDate()))
+                    elseif timeoutCounter >= service.runService.portTimeout then
+                        error(string.format("\n%s | Sensor payload missed.", shadowcraft.getDate()),0)
+                    end
+
+                    sleep(1/service.runService.systemFrequency)
+                until service.runService.halt == true
+            end
+        )   
     end,
 
     updateMonitorComputer = function()
@@ -113,8 +176,8 @@ service = {
                             local VentHeatText = string.format("VENT-%s H/O",i)
                             service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentHeatText)/2+1,9+Y*4)
                             service.monitor.monitor.write(VentHeatText)
-                            local VentHeatValue = service.sensorNetwork.sensors[i+1]["Data"]["heat"]
-                            local VentExtractValue = service.sensorNetwork.sensors[i+1]["Data"]["extract"]
+                            local VentHeatValue = service.sensorNetwork.sensors[i+1]["data"]["heat"]
+                            local VentExtractValue = service.sensorNetwork.sensors[i+1]["data"]["extract"]
                             local VentValue = string.format("%s/%s",VentHeatValue,VentExtractValue)
                             service.monitor.monitor.setCursorPos(service.monitor.width/QUAD-string.len(VentValue)/2+1,10+Y*4)
                             service.monitor.monitor.write(VentValue)
@@ -177,6 +240,13 @@ service = {
         service[service.programTypes[service.runService.programType].set]()
     end,
 
+    setFunnelComputer = function()
+        service.setWirelessModem()
+        service.setFunnelComputer()
+
+        service.wirelessNetwork.modem.open(service.ports.sensorPort)
+    end,
+
     setMonitorComputer = function()
         service.setWirelessModem()
         service.setMonitor()
@@ -208,6 +278,16 @@ service = {
 
     setWirelessModem = function()
         service.wirelessNetwork.modem = shadowcraft.getWirelessModem()
+    end,
+
+    setFunnelNetwork = function()
+        service.funnelNetwork.modem = shadowcraft.getWiredModem()
+
+        shadowcraft.printFancy("yellow", "\nScanning Funnel Network for Integrators...\n")
+        service.funnelNetwork.integrators = service.funnelNetwork.modem.getNamesRemote()
+        
+        shadowcraft.printFancy("green","\nIntegrators are complete.")
+        return true
     end,
 
     setSensorNetwork = function()
