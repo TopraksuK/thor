@@ -66,12 +66,9 @@ service = {
     },
 
     updateMain = function()
-        if service.runService.programType == service.programTypes["exit"] then return nil end
+        if service.runService.programType == "exit" then return nil end
 
-        repeat
-            service[service.programTypes[service.runService.programType].update]()
-            sleep(1/service.runService.systemFrequency)
-        until service.runService.halt == true
+        service[service.programTypes[service.runService.programType].update]()
     end,
 
     updateMonitorComputer = function()
@@ -158,6 +155,12 @@ service = {
         for i, sensor in pairs(service.sensorNetwork.sensors) do
             sensor.data = service.sensorNetwork.modem.callRemote(sensor.reader, "getBlockData")
         end
+    end,
+
+    setMain = function()
+        if service.runService.programType == "exit" then return nil end
+
+        service[service.programTypes[service.runService.programType].set]()
     end,
 
     setMonitorComputer = function()
@@ -271,6 +274,7 @@ service = {
 -- [Setup] --
 
 service.setProgramType()
+service.setMain()
 
 -- [Update] --
 
